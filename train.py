@@ -7,7 +7,6 @@ from typing import Dict, Any
 from pathlib import Path
 
 def load_config(config_path: str) -> Dict[str, Any]:
-    # Get the directory containing the script
     script_dir = Path(__file__).parent.absolute()
     config_file = Path(script_dir) / config_path
     
@@ -20,24 +19,41 @@ def load_config(config_path: str) -> Dict[str, Any]:
 def load_model_and_tokenizer(config: Dict[str, Any]):
     model = AutoModelForCausalLM.from_pretrained(config['model_name'])
     tokenizer = AutoTokenizer.from_pretrained(config['model_name'])
+    
+    # Set up padding token for GPT-2
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+        model.config.pad_token_id = model.config.eos_token_id
+    
     return model, tokenizer
 
 def prepare_dataset(config: Dict[str, Any], tokenizer):
+    print("Loading dataset...")
     dataset = load_dataset(config['dataset_name'])
+    print("Dataset loaded successfully.")
     
     def tokenize_function(examples):
+        # Combine title and description if they exist
+        if 'title' in examples and 'description' in examples:
+            texts = [f"{title} {desc}" for title, desc in zip(examples['title'], examples['description'])]
+        else:
+            texts = examples[config['text_column']]
+            
         return tokenizer(
-            examples[config['text_column']], 
-            truncation=True, 
-            padding='max_length', 
+            texts,
+            truncation=True,
+            padding='max_length',
             max_length=config['max_length']
         )
     
+    print("Tokenizing dataset...")
     tokenized_dataset = dataset.map(
         tokenize_function,
         batched=True,
-        remove_columns=dataset['train'].column_names
+        remove_columns=dataset['train'].column_names,
+        desc="Tokenizing the dataset"
     )
+    print("Dataset tokenization complete.")
     
     return tokenized_dataset
 
@@ -68,7 +84,19 @@ def main():
             logging_dir='./logs',
             logging_steps=100,
             save_steps=500,
-            learning_rate=config['learning_rate']
+            learning_rate=config['learning_rate'],
+            # Add evaluation steps
+            evaluation_strategy="steps",
+            eval_steps=500,
+            # Add warmup steps
+            warmup_steps=500,
+            # Add weight decay for regularization
+            weight_decay=0.01,
+            # Enable logging to track training progress
+            logging_first_step=True,
+            # Add early stopping
+            load_best_model_at_end=True,
+            metric_for_best_model="loss"
         )
         
         print("Initializing trainer...")
@@ -76,7 +104,7 @@ def main():
             model=model,
             args=training_args,
             train_dataset=dataset['train'],
-            eval_dataset=dataset['validation'] if 'validation' in dataset else None
+            eval_dataset=dataset['test']
         )
         
         print("Starting training...")
