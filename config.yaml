@@ -1,6 +1,6 @@
 # Model configuration
 model_name: 'distilgpt2'  # or any other small language model from HuggingFace
-dataset_name: 'wikitext-2-v1'  # smaller dataset for faster testing
+dataset_name: 'wikitext/wikitext-2-v1'  # smaller dataset for faster testing
 text_column: 'text'  # column name containing the text in your dataset
 
 # Training configuration
