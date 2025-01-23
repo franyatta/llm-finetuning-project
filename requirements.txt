@@ -1,0 +1,6 @@
+torch>=2.0.0
+transformers>=4.30.0
+datasets>=2.12.0
+pyyaml>=6.0
+tqdm>=4.65.0
+scientific-python-toolkit>=1.0.0
