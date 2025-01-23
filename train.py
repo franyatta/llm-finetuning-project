@@ -12,7 +12,13 @@ def load_config(config_path: str) -> Dict[str, Any]:
     
     try:
         with open(config_file, 'r') as f:
-            return yaml.safe_load(f)
+            config = yaml.safe_load(f)
+            # Ensure numeric values are of the correct type
+            config['num_epochs'] = int(config['num_epochs'])
+            config['batch_size'] = int(config['batch_size'])
+            config['learning_rate'] = float(config['learning_rate'])
+            config['max_length'] = int(config['max_length'])
+            return config
     except FileNotFoundError:
         raise FileNotFoundError(f"Config file not found at {config_file}. Please make sure config.yaml is in the same directory as train.py")
 
@@ -62,7 +68,7 @@ def main():
     
     try:
         config = load_config('config.yaml')
-        print("Successfully loaded config.")
+        print("Successfully loaded config:", config)  # Print config for debugging
         
         print("Loading model and tokenizer...")
         model, tokenizer = load_model_and_tokenizer(config)
@@ -84,20 +90,16 @@ def main():
             logging_dir='./logs',
             logging_steps=100,
             save_steps=500,
-            learning_rate=config['learning_rate'],
-            # Add evaluation steps
+            learning_rate=float(config['learning_rate']),  # Ensure float type
             evaluation_strategy="steps",
             eval_steps=500,
-            # Add warmup steps
             warmup_steps=500,
-            # Add weight decay for regularization
             weight_decay=0.01,
-            # Enable logging to track training progress
             logging_first_step=True,
-            # Add early stopping
             load_best_model_at_end=True,
             metric_for_best_model="loss"
         )
+        print("Training arguments:", training_args)  # Print args for debugging
         
         print("Initializing trainer...")
         trainer = Trainer(
