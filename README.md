@@ -16,9 +16,20 @@ python -m venv venv
 source venv/bin/activate  # On Windows, use: venv\Scripts\activate
 ```
 
-3. Install dependencies:
+3. Install PyTorch:
+Visit https://pytorch.org/get-started/locally/ and run the appropriate command for your system. For example:
+- For CUDA (if you have an NVIDIA GPU):
 ```bash
-pip install -r requirements.txt
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+```
+- For CPU only:
+```bash
+pip3 install torch torchvision torchaudio
+```
+
+4. Install other dependencies:
+```bash
+pip install transformers>=4.30.0 datasets>=2.12.0 pyyaml>=6.0 tqdm>=4.65.0
 ```
 
 ## Configuration
