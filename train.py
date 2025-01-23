@@ -1,5 +1,5 @@
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer
+from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer, DataCollatorForLanguageModeling
 from datasets import load_dataset
 import os
 import yaml
@@ -39,18 +39,21 @@ def prepare_dataset(config: Dict[str, Any], tokenizer):
     print("Dataset loaded successfully.")
     
     def tokenize_function(examples):
-        # Combine title and description if they exist
-        if 'title' in examples and 'description' in examples:
-            texts = [f"{title} {desc}" for title, desc in zip(examples['title'], examples['description'])]
-        else:
-            texts = examples[config['text_column']]
-            
-        return tokenizer(
+        # Combine title and description for ag_news dataset
+        texts = [f"{title} {desc}" for title, desc in zip(examples['text'], examples['description'])]
+        
+        result = tokenizer(
             texts,
             truncation=True,
-            padding='max_length',
-            max_length=config['max_length']
+            max_length=config['max_length'],
+            padding="max_length",
+            return_tensors="pt"
         )
+        
+        # Create labels for language modeling (shift input_ids)
+        result["labels"] = result["input_ids"].clone()
+        
+        return result
     
     print("Tokenizing dataset...")
     tokenized_dataset = dataset.map(
@@ -68,7 +71,7 @@ def main():
     
     try:
         config = load_config('config.yaml')
-        print("Successfully loaded config:", config)  # Print config for debugging
+        print("Successfully loaded config:", config)
         
         print("Loading model and tokenizer...")
         model, tokenizer = load_model_and_tokenizer(config)
@@ -87,26 +90,35 @@ def main():
             output_dir=str(output_dir),
             num_train_epochs=config['num_epochs'],
             per_device_train_batch_size=config['batch_size'],
+            per_device_eval_batch_size=config['batch_size'],
             logging_dir='./logs',
             logging_steps=100,
             save_steps=500,
-            learning_rate=float(config['learning_rate']),  # Ensure float type
+            learning_rate=float(config['learning_rate']),
             evaluation_strategy="steps",
             eval_steps=500,
             warmup_steps=500,
             weight_decay=0.01,
             logging_first_step=True,
             load_best_model_at_end=True,
-            metric_for_best_model="loss"
+            metric_for_best_model="loss",
+            remove_unused_columns=False,  # Important for language modeling
         )
-        print("Training arguments:", training_args)  # Print args for debugging
+        print("Training arguments:", training_args)
+        
+        # Create data collator for language modeling
+        data_collator = DataCollatorForLanguageModeling(
+            tokenizer=tokenizer,
+            mlm=False  # We're doing causal language modeling, not masked
+        )
         
         print("Initializing trainer...")
         trainer = Trainer(
             model=model,
             args=training_args,
             train_dataset=dataset['train'],
-            eval_dataset=dataset['test']
+            eval_dataset=dataset['test'],
+            data_collator=data_collator
         )
         
         print("Starting training...")
