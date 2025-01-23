@@ -37,10 +37,10 @@ def prepare_dataset(config: Dict[str, Any], tokenizer):
     print("Loading dataset...")
     dataset = load_dataset(config['dataset_name'])
     print("Dataset loaded successfully.")
+    print("Dataset structure:", dataset['train'].features)
     
     def tokenize_function(examples):
-        # Combine title and description for ag_news dataset
-        texts = [f"{title} {desc}" for title, desc in zip(examples['text'], examples['description'])]
+        texts = examples['text']  # Just use the text field
         
         result = tokenizer(
             texts,
@@ -50,7 +50,7 @@ def prepare_dataset(config: Dict[str, Any], tokenizer):
             return_tensors="pt"
         )
         
-        # Create labels for language modeling (shift input_ids)
+        # Create labels for language modeling (same as input_ids)
         result["labels"] = result["input_ids"].clone()
         
         return result
@@ -63,6 +63,12 @@ def prepare_dataset(config: Dict[str, Any], tokenizer):
         desc="Tokenizing the dataset"
     )
     print("Dataset tokenization complete.")
+    
+    # Print sample of processed data
+    print("\nSample of processed data:")
+    sample = tokenized_dataset['train'][0]
+    print("Input shape:", {k: v.shape if hasattr(v, 'shape') else len(v) for k, v in sample.items()})
+    print("Available keys:", list(sample.keys()))
     
     return tokenized_dataset
 
