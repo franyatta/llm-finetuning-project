@@ -1,23 +1,28 @@
 # Language Model Fine-tuning Project
 
-This project provides a framework for fine-tuning small language models using the AG News dataset. It uses PyTorch and the Transformers library to fine-tune DistilGPT2 on news articles for improved text generation.
+A lightweight framework for fine-tuning small language models, designed to run on basic hardware. Supports multiple datasets for different use cases.
 
 ## Project Structure
 ```
 llm-finetuning-project/
-├── train.py          # Main training script
-├── config.yaml       # Configuration file
-├── requirements.txt  # Project dependencies
-└── results/         # Directory for saved models and checkpoints
+├── train.py              # Main training script
+├── config.yaml           # AG News dataset configuration
+├── config_wikitext.yaml  # WikiText dataset configuration
+├── requirements.txt      # Project dependencies
+└── results/             # Directory for saved models and checkpoints
 ```
 
-## Features
-- Fine-tune DistilGPT2 on the AG News dataset
-- Configurable training parameters
-- Automatic model checkpointing
-- Training progress logging
-- Evaluation during training
-- Early stopping based on loss
+## Available Datasets
+
+1. **AG News Dataset** (config.yaml)
+   - News articles categorized by topic
+   - Great for learning news-related content
+   - Smaller dataset, faster training
+
+2. **WikiText-2 Dataset** (config_wikitext.yaml)
+   - Wikipedia articles with minimal preprocessing
+   - Good for general language understanding
+   - Medium-sized dataset, balanced training time
 
 ## Setup
 
@@ -48,38 +53,22 @@ pip install 'accelerate>=0.26.0' 'transformers[torch]'
 pip install datasets>=2.12.0 pyyaml>=6.0 tqdm>=4.65.0
 ```
 
-## Configuration
-
-Edit `config.yaml` to customize:
-- Model parameters (currently using distilgpt2)
-- Training parameters (batch size, learning rate, etc.)
-- Maximum sequence length
-- Number of training epochs
-
-Example configuration:
-```yaml
-# Model configuration
-model_name: 'distilgpt2'
-dataset_name: 'ag_news'
-text_column: 'text'
-
-# Training configuration
-output_dir: './results'
-num_epochs: 3
-batch_size: 8
-learning_rate: 0.00002
-max_length: 128
-```
-
 ## Training
 
-Start the training process:
+Choose your dataset by using the appropriate config file:
+
+1. For AG News dataset:
 ```bash
-python train.py
+python train.py config.yaml
+```
+
+2. For WikiText dataset:
+```bash
+python train.py config_wikitext.yaml
 ```
 
 The script will:
-1. Load and prepare the AG News dataset
+1. Load and prepare the chosen dataset
 2. Initialize the DistilGPT2 model
 3. Start the training process with progress bars
 4. Save checkpoints regularly
@@ -88,11 +77,36 @@ The script will:
 
 To stop training early, use `Ctrl+C`. The model will save its current state before stopping.
 
+## Configuration
+
+Both config files allow you to customize:
+- Model parameters (currently using distilgpt2)
+- Training parameters (batch size, learning rate, etc.)
+- Maximum sequence length
+- Number of training epochs
+
+Example configuration for WikiText:
+```yaml
+# Model configuration
+model_name: 'distilgpt2'
+dataset_name: 'wikitext'
+dataset_config: 'wikitext-2-raw-v1'
+text_column: 'text'
+
+# Training configuration
+output_dir: './results_wikitext'
+num_epochs: 3
+batch_size: 8
+learning_rate: 0.00002
+max_length: 128
+```
+
 ## Model Outputs
 
-Trained models and checkpoints are saved in the `results` directory:
+Trained models and checkpoints are saved in the specified output directory:
 - `results/checkpoint-{step}/`: Training checkpoints
 - `results/final_model/`: Final trained model
+- `results_wikitext/`: WikiText model outputs
 
 ## Requirements
 
