@@ -1,12 +1,12 @@
 # Model configuration
-model_name: 'distilgpt2'  # or any other small language model from HuggingFace
-dataset_name: 'wikitext'  # WikiText-2 dataset
-dataset_config: 'wikitext-2-raw-v1'  # Raw version of WikiText-2
-text_column: 'text'  # column name containing the text in your dataset
+model_name: 'distilgpt2'
+dataset_name: 'wikitext'
+dataset_config: 'wikitext-2-raw-v1'
+text_column: 'text'
 
 # Training configuration
 output_dir: './results_wikitext'
-num_epochs: 3
-batch_size: 8
-learning_rate: 0.00002
-max_length: 128
+num_epochs: 3        # Kept: Wikipedia articles need more training
+batch_size: 4        # Decreased: longer sequences need more memory
+learning_rate: 1e-5  # Decreased: more stable for diverse content
+max_length: 256      # Increased: capture more article context
