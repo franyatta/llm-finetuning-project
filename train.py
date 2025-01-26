@@ -20,9 +20,10 @@ def load_config(config_path: str) -> Dict[str, Any]:
             config['max_length'] = int(config['max_length'])
             return config
     except FileNotFoundError:
-        raise FileNotFoundError(f"Config file not found at {config_file}. Please make sure config.yaml is in the same directory as train.py")
+        raise FileNotFoundError(f"Config file not found at {config_file}. Please make sure config.yaml exists")
 
 def load_model_and_tokenizer(config: Dict[str, Any]):
+    print(f"Loading model {config['model_name']}...")
     model = AutoModelForCausalLM.from_pretrained(config['model_name'])
     tokenizer = AutoTokenizer.from_pretrained(config['model_name'])
     
@@ -35,13 +36,24 @@ def load_model_and_tokenizer(config: Dict[str, Any]):
 
 def prepare_dataset(config: Dict[str, Any], tokenizer):
     print("Loading dataset...")
-    dataset = load_dataset(config['dataset_name'])
-    print("Dataset loaded successfully.")
+    
+    # Handle different dataset configurations
+    if 'dataset_config' in config:
+        dataset = load_dataset(config['dataset_name'], config['dataset_config'])
+        print(f"Loaded {config['dataset_name']} with config {config['dataset_config']}")
+    else:
+        dataset = load_dataset(config['dataset_name'])
+        print(f"Loaded {config['dataset_name']}")
+    
     print("Dataset structure:", dataset['train'].features)
     
     def tokenize_function(examples):
-        texts = examples['text']  # Just use the text field
-        
+        # Handle different dataset structures
+        if isinstance(examples[config['text_column']], list):
+            texts = examples[config['text_column']]
+        else:
+            texts = [examples[config['text_column']]]
+            
         result = tokenizer(
             texts,
             truncation=True,
@@ -76,7 +88,9 @@ def main():
     print("Starting the training process...")
     
     try:
-        config = load_config('config.yaml')
+        import sys
+        config_file = sys.argv[1] if len(sys.argv) > 1 else 'config.yaml'
+        config = load_config(config_file)
         print("Successfully loaded config:", config)
         
         print("Loading model and tokenizer...")
@@ -123,7 +137,7 @@ def main():
             model=model,
             args=training_args,
             train_dataset=dataset['train'],
-            eval_dataset=dataset['test'],
+            eval_dataset=dataset.get('test', dataset.get('validation')),  # Use test if available, else validation
             data_collator=data_collator
         )
         
