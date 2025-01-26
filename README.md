@@ -1,13 +1,13 @@
 # Language Model Fine-tuning Project
 
-A lightweight framework for fine-tuning small language models, designed to run on basic hardware. Supports multiple datasets for different use cases.
+A lightweight framework for fine-tuning small language models, designed to run on basic hardware. Features optimized configurations for both news articles and general text.
 
 ## Project Structure
 ```
 llm-finetuning-project/
 ├── train.py              # Main training script
-├── config.yaml           # AG News dataset configuration
-├── config_wikitext.yaml  # WikiText dataset configuration
+├── config.yaml           # Optimized AG News configuration
+├── config_wikitext.yaml  # Optimized WikiText configuration
 ├── requirements.txt      # Project dependencies
 └── results/             # Directory for saved models and checkpoints
 ```
@@ -16,13 +16,27 @@ llm-finetuning-project/
 
 1. **AG News Dataset** (config.yaml)
    - News articles categorized by topic
-   - Great for learning news-related content
-   - Smaller dataset, faster training
+   - Optimized for quick training on basic hardware
+   - Configuration tuned for shorter text sequences
+   - Training time: ~1-2 hours on CPU
+   ```yaml
+   num_epochs: 2        # Shorter training cycle
+   batch_size: 16       # Optimized for shorter texts
+   learning_rate: 5e-5  # Faster learning for structured data
+   max_length: 64       # Tuned for news article length
+   ```
 
 2. **WikiText-2 Dataset** (config_wikitext.yaml)
    - Wikipedia articles with minimal preprocessing
-   - Good for general language understanding
-   - Medium-sized dataset, balanced training time
+   - Configured for comprehensive language learning
+   - Handles longer text sequences effectively
+   - Training time: ~3-4 hours on CPU
+   ```yaml
+   num_epochs: 3        # Fuller training cycle
+   batch_size: 4        # Handles longer sequences
+   learning_rate: 1e-5  # Stable learning for diverse content
+   max_length: 256      # Captures more context
+   ```
 
 ## Setup
 
@@ -55,58 +69,45 @@ pip install datasets>=2.12.0 pyyaml>=6.0 tqdm>=4.65.0
 
 ## Training
 
-Choose your dataset by using the appropriate config file:
+Choose your dataset based on your needs:
 
-1. For AG News dataset:
+1. For news article generation (faster training):
 ```bash
 python train.py config.yaml
 ```
 
-2. For WikiText dataset:
+2. For general text generation (more comprehensive):
 ```bash
 python train.py config_wikitext.yaml
 ```
 
-The script will:
-1. Load and prepare the chosen dataset
-2. Initialize the DistilGPT2 model
-3. Start the training process with progress bars
-4. Save checkpoints regularly
-5. Perform evaluation during training
-6. Save the final model
+Training features:
+- Progress bars with loss metrics
+- Regular checkpoints
+- Automatic evaluation
+- Early stopping capability
+- Memory-efficient processing
 
-To stop training early, use `Ctrl+C`. The model will save its current state before stopping.
+To stop training early, use `Ctrl+C` (the model will save its current state).
 
-## Configuration
+## Hardware Requirements
 
-Both config files allow you to customize:
-- Model parameters (currently using distilgpt2)
-- Training parameters (batch size, learning rate, etc.)
-- Maximum sequence length
-- Number of training epochs
-
-Example configuration for WikiText:
-```yaml
-# Model configuration
-model_name: 'distilgpt2'
-dataset_name: 'wikitext'
-dataset_config: 'wikitext-2-raw-v1'
-text_column: 'text'
-
-# Training configuration
-output_dir: './results_wikitext'
-num_epochs: 3
-batch_size: 8
-learning_rate: 0.00002
-max_length: 128
-```
+The project is optimized for basic hardware:
+- Minimum 8GB RAM
+- CPU training supported
+- GPU optional (will be used if available)
+- ~2GB disk space for models and checkpoints
 
 ## Model Outputs
 
-Trained models and checkpoints are saved in the specified output directory:
-- `results/checkpoint-{step}/`: Training checkpoints
-- `results/final_model/`: Final trained model
-- `results_wikitext/`: WikiText model outputs
+The trained models are saved in separate directories:
+- AG News: `results/final_model/`
+- WikiText: `results_wikitext/final_model/`
+
+Each directory contains:
+- Model weights
+- Tokenizer files
+- Training checkpoints
 
 ## Requirements
 
@@ -120,4 +121,4 @@ Trained models and checkpoints are saved in the specified output directory:
 
 ## License
 
-MIT License
+MIT License - Free to use, modify, and distribute with attribution.
