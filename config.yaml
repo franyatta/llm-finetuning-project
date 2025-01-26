@@ -1,11 +1,11 @@
 # Model configuration
-model_name: 'distilgpt2'  # or any other small language model from HuggingFace
-dataset_name: 'ag_news'  # news articles dataset
-text_column: 'text'  # column name containing the text in your dataset
+model_name: 'distilgpt2'
+dataset_name: 'ag_news'
+text_column: 'text'
 
 # Training configuration
 output_dir: './results'
-num_epochs: 3
-batch_size: 8
-learning_rate: 0.00002  # Changed from string "2e-5" to float 0.00002
-max_length: 128
+num_epochs: 2        # Reduced: news articles follow similar patterns
+batch_size: 16       # Increased: news articles are shorter
+learning_rate: 5e-5  # Increased: news data is structured
+max_length: 64       # Decreased: typical news article length
