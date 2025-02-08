@@ -1,124 +1,106 @@
 # Language Model Fine-tuning Project
 
-A lightweight framework for fine-tuning small language models, designed to run on basic hardware. Features optimized configurations for both news articles and general text.
+This project provides a framework for fine-tuning small language models using the HuggingFace Transformers library. It includes data preprocessing, model training, and evaluation capabilities.
 
-## Project Structure
-```
-llm-finetuning-project/
-├── train.py              # Main training script
-├── config.yaml           # Optimized AG News configuration
-├── config_wikitext.yaml  # Optimized WikiText configuration
-├── requirements.txt      # Project dependencies
-└── results/             # Directory for saved models and checkpoints
-```
+## Features
 
-## Available Datasets
+- Data preprocessing with text cleaning and chunking
+- Configurable model training parameters
+- Interactive model evaluation
+- Support for HuggingFace datasets
+- Perplexity-based model evaluation
+- Flexible configuration system
 
-1. **AG News Dataset** (config.yaml)
-   - News articles categorized by topic
-   - Optimized for quick training on basic hardware
-   - Configuration tuned for shorter text sequences
-   - Training time: ~1-2 hours on CPU
-   ```yaml
-   num_epochs: 2        # Shorter training cycle
-   batch_size: 16       # Optimized for shorter texts
-   learning_rate: 5e-5  # Faster learning for structured data
-   max_length: 64       # Tuned for news article length
-   ```
+## Installation
 
-2. **WikiText-2 Dataset** (config_wikitext.yaml)
-   - Wikipedia articles with minimal preprocessing
-   - Configured for comprehensive language learning
-   - Handles longer text sequences effectively
-   - Training time: ~3-4 hours on CPU
-   ```yaml
-   num_epochs: 3        # Fuller training cycle
-   batch_size: 4        # Handles longer sequences
-   learning_rate: 1e-5  # Stable learning for diverse content
-   max_length: 256      # Captures more context
-   ```
-
-## Setup
-
-1. Prerequisites: Python 3.11 recommended (3.13+ not currently supported by PyTorch)
-
-2. Clone the repository:
+1. Clone the repository:
 ```bash
 git clone https://github.com/franyatta/llm-finetuning-project.git
 cd llm-finetuning-project
 ```
 
-3. Create a virtual environment and activate it:
+2. Create a virtual environment and activate it:
 ```bash
 python -m venv venv
-source venv/bin/activate  # On Windows, use: venv\Scripts\activate
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-4. Install PyTorch first:
+3. Install the required packages:
 ```bash
-pip3 install torch torchvision torchaudio  # CPU only
-# OR for NVIDIA GPU support:
-# pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip install -r requirements.txt
 ```
 
-5. Install other dependencies:
+## Usage
+
+### Data Preprocessing
+
+Process your dataset before training:
+
 ```bash
-pip install 'accelerate>=0.26.0' 'transformers[torch]'
-pip install datasets>=2.12.0 pyyaml>=6.0 tqdm>=4.65.0
+python preprocess.py --dataset_name "your_dataset" \
+                    --output_file processed_data.json \
+                    --min_length 100 \
+                    --max_length 1024
 ```
 
-## Training
+### Training
 
-Choose your dataset based on your needs:
+Train the model using the processed dataset:
 
-1. For news article generation (faster training):
 ```bash
-python train.py config.yaml
+python train.py --model_name "EleutherAI/pythia-70m" \
+                --dataset_name "your_dataset" \
+                --num_epochs 3 \
+                --batch_size 8
 ```
 
-2. For general text generation (more comprehensive):
+### Evaluation
+
+Evaluate the fine-tuned model:
+
 ```bash
-python train.py config_wikitext.yaml
+python evaluate.py --model_path "./output" \
+                  --input_file "test_data.txt"
 ```
 
-Training features:
-- Progress bars with loss metrics
-- Regular checkpoints
-- Automatic evaluation
-- Early stopping capability
-- Memory-efficient processing
+## Configuration
 
-To stop training early, use `Ctrl+C` (the model will save its current state).
+The project uses a configuration file (`config.json`) to manage various parameters:
 
-## Hardware Requirements
+- Model configuration (architecture, size, etc.)
+- Training parameters (learning rate, batch size, etc.)
+- Data processing settings
+- Generation parameters
 
-The project is optimized for basic hardware:
-- Minimum 8GB RAM
-- CPU training supported
-- GPU optional (will be used if available)
-- ~2GB disk space for models and checkpoints
+You can modify these settings in the `config.json` file.
 
-## Model Outputs
+## Project Structure
 
-The trained models are saved in separate directories:
-- AG News: `results/final_model/`
-- WikiText: `results_wikitext/final_model/`
-
-Each directory contains:
-- Model weights
-- Tokenizer files
-- Training checkpoints
+```
+llm-finetuning-project/
+├── train.py           # Main training script
+├── evaluate.py        # Model evaluation script
+├── preprocess.py      # Data preprocessing utilities
+├── config.json        # Configuration file
+├── requirements.txt   # Project dependencies
+└── README.md         # Project documentation
+```
 
 ## Requirements
 
-- Python 3.11 (recommended)
+- Python 3.8+
 - PyTorch
-- Transformers library
-- HuggingFace datasets
-- PyYAML
+- Transformers
+- Datasets
 - tqdm
-- accelerate
+- numpy
+
+See `requirements.txt` for complete list of dependencies.
+
+## Contributing
+
+Feel free to open issues or submit pull requests with improvements.
 
 ## License
 
-MIT License - Free to use, modify, and distribute with attribution.
+MIT License - feel free to use this project for your own work.
